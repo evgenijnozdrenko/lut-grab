@@ -1,18 +1,18 @@
-name: LUT Grab (Windows)
+name: Збірка під Windows
 
-# Зібрати .exe можна тільки на Windows: PyInstaller не вміє крос-компіляцію,
-# тому з macOS ця збірка не запускається принципово — тільки тут.
+# .exe збирається тільки на Windows: PyInstaller не вміє крос-компіляцію,
+# тому з мака ця збірка не запускається принципово.
 on:
   workflow_dispatch:
   push:
-    tags: ['lut-grab-v*']
+    tags: ['v*']
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: apps/lut-grab
 
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - run: pip install pyinstaller
+      - run: pip install pyinstaller pywebview
 
       - name: Зібрати LUT Grab.exe
         run: >
@@ -29,11 +29,17 @@ jobs:
           --name "LUT Grab"
           --icon icon.ico
           --add-data "ui.html;."
+          --collect-all webview
           server.py
 
       - uses: actions/upload-artifact@v4
         with:
           name: LUT-Grab-Windows
-          path: |
-            apps/lut-grab/dist/LUT Grab.exe
-            apps/lut-grab/ЯК ВІДКРИТИ.txt
+          path: dist/LUT Grab.exe
+
+      # Тег є - значить це реліз, і .exe має лягти поруч із DMG.
+      - name: Додати до релізу
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/LUT Grab.exe
