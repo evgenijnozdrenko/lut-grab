@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUT Grab</title>
+<style>
+  :root{
+    --bg:#14161F; --panel:#1B1E2A; --line:#2A2E3C;
+    --ink:#E8E4DA; --dim:#8B90A0; --accent:#E8631A; --ok:#2E6B66; --bad:#C4483C;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:26px;margin:0;letter-spacing:-.02em}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin:4px 0 24px}
+  .promo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;text-decoration:none;
+    background:var(--panel);border:1px solid var(--accent);border-radius:12px;
+    padding:13px 16px;margin-bottom:16px;color:var(--ink)}
+  .promo:hover{background:#20242F}
+  .promo-tx{flex:1;min-width:200px;font-size:13px;line-height:1.45;color:var(--dim)}
+  .promo-tx b{color:var(--ink);font-weight:600}
+  .promo-btn{flex:0 0 auto;border:1px solid var(--accent);color:var(--accent);
+    border-radius:99px;padding:6px 15px;font-size:13px;font-weight:600}
+  .promo:hover .promo-btn{background:var(--accent);color:#fff}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px;margin-bottom:16px}
+  label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;
+        color:var(--dim);margin-bottom:6px}
+  input[type=text],select{width:100%;background:#101219;border:1px solid var(--line);
+    color:var(--ink);border-radius:8px;padding:11px 12px;font:inherit;font-size:14px}
+  input[type=text]:focus,select:focus{outline:none;border-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:0;border-radius:8px;
+    padding:12px 20px;font:inherit;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:400}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .row>*{flex:1}
+  .row>button{flex:0 0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{flex:1;background:transparent;color:var(--dim);font-weight:400;border-radius:0;padding:11px}
+  .seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
+  .check{display:flex;align-items:center;gap:9px;color:var(--ink);font-size:14px;cursor:pointer;
+         text-transform:none;letter-spacing:0;margin:0}
+  .check input{accent-color:var(--accent);width:16px;height:16px}
+  .meta{display:flex;gap:14px;align-items:flex-start}
+  .meta img{width:150px;border-radius:8px;background:#000;flex:0 0 auto}
+  .meta b{display:block;font-size:15px;margin-bottom:4px}
+  .meta small{color:var(--dim);font-size:13px}
+  .bar{height:7px;background:#101219;border-radius:4px;overflow:hidden;margin:14px 0 8px}
+  .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+  pre{background:#0C0E14;border:1px solid var(--line);border-radius:8px;padding:12px;
+      font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#9AA0B0;
+      max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);
+        border:1px solid var(--line);border-radius:99px;padding:4px 11px;margin:0 6px 6px 0}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--bad)}
+  .dot.on{background:#5FBF6A}
+  .msg{font-size:13px;padding:11px 13px;border-radius:8px;margin-top:12px;display:none}
+  .msg.err{background:rgba(196,72,60,.14);border:1px solid rgba(196,72,60,.4);color:#F0A79E;display:block}
+  .msg.good{background:rgba(46,107,102,.18);border:1px solid rgba(46,107,102,.5);color:#8FD6CE;display:block}
+  .hide{display:none !important}
+  .note{color:var(--dim);font-size:12px;margin-top:8px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>LUT <span>Grab</span></h1>
+  <p class="sub">Локальна качалка. Нічого нікуди не йде — усе крутиться на цій машині.</p>
+
+  <a class="promo" href="https://t.me/lootaimo" target="_blank" rel="noopener">
+    <span class="promo-tx"><b>Більше луту — в телеграмі.</b>
+      Інструменти, роздачі й розбори для тих, хто робить відео.</span>
+    <span class="promo-btn">Підписатись</span>
+  </a>
+
+  <!-- ЗАЛЕЖНОСТІ -->
+  <div class="card" id="deps">
+    <div id="pills"></div>
+    <div id="setup" class="hide">
+      <div class="msg err" style="display:block">
+        Немає <b>yt-dlp</b> — без нього нічого не завантажиться.
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button id="btnInstall">Поставити yt-dlp сюди</button>
+        <button class="ghost" id="btnRecheck">Перевірити ще раз</button>
+      </div>
+      <div class="bar hide" id="instBar"><i></i></div>
+      <p class="note">Кладу один бінарник у власну теку. Систему не чіпаю.
+         Альтернатива в терміналі: <code>brew install yt-dlp</code></p>
+    </div>
+    <div id="noff" class="hide">
+      <div class="msg err" style="display:block">
+        Немає <b>ffmpeg</b> — без нього не буде 1080p+ (відео і звук на YouTube лежать
+        окремими файлами), mp3 та обрізання відрізків.
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button id="btnFf">Поставити ffmpeg сюди</button>
+      </div>
+      <div class="bar hide" id="ffBar"><i></i></div>
+      <p class="note">Два бінарники, ffmpeg і ffprobe, приблизно 37 МБ стисненими.
+         Кладу у власну теку. Систему не чіпаю.
+         Альтернатива в терміналі: <code>brew install ffmpeg</code></p>
+    </div>
+  </div>
+
+  <!-- ПОСИЛАННЯ -->
+  <div class="card">
+    <label for="url">Посилання</label>
+    <div class="row">
+      <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" spellcheck="false">
+      <button id="btnInfo">Розібрати</button>
+    </div>
+    <div id="meta" class="meta hide" style="margin-top:16px"></div>
+    <div id="infoErr" class="msg"></div>
+  </div>
+
+  <!-- ОПЦІЇ -->
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>Що забираємо</label>
+        <div class="seg" id="mode">
+          <button data-mode="video" aria-pressed="true">Відео</button>
+          <button data-mode="audio" aria-pressed="false">Тільки звук</button>
+          <button data-mode="thumb" aria-pressed="false">Превью</button>
+        </div>
+      </div>
+      <div id="qualityBox">
+        <label for="height">Якість</label>
+        <select id="height"></select>
+      </div>
+    </div>
+
+    <div class="grid" id="cutBox" style="margin-top:16px">
+      <div>
+        <label for="start">Відрізок від</label>
+        <input type="text" id="start" placeholder="порожньо = з початку" autocomplete="off">
+      </div>
+      <div>
+        <label for="end">до</label>
+        <input type="text" id="end" placeholder="порожньо = до кінця" autocomplete="off">
+      </div>
+    </div>
+    <p class="note" id="tcNote">Формат: <code>90</code>, <code>1:30</code> або <code>0:01:30</code></p>
+    <p class="note" id="appleNote">Качаю у H.264 — його відкриває будь-який плеєр і монтажка.
+       YouTube роздає цей формат до 1080p, вище тільки AV1 і VP9, які QuickTime не програє.
+       Тому 4K опускається до найкращої сумісної якості: краще так, ніж файл, що не відкриється.</p>
+
+    <div class="grid" style="margin-top:18px">
+      <label class="check"><input type="checkbox" id="subs"> Субтитри (uk, en)</label>
+      <label class="check"><input type="checkbox" id="playlist"> Весь плейліст</label>
+    </div>
+
+    <div style="margin-top:18px">
+      <label for="cookies">Cookies з браузера — якщо YouTube просить підтвердити, що ти не бот</label>
+      <select id="cookies">
+        <option value="">не використовувати</option>
+        <option value="safari">Safari</option>
+        <option value="chrome">Chrome</option>
+        <option value="brave">Brave</option>
+        <option value="edge">Edge</option>
+        <option value="firefox">Firefox</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ДІЯ -->
+  <div class="card">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button id="btnGo">Забрати</button>
+      <button class="ghost hide" id="btnStop">Зупинити</button>
+      <button class="ghost" id="btnOpen">Показати теку</button>
+      <button class="ghost" id="btnQuit" style="margin-left:auto">Вимкнути</button>
+    </div>
+    <div class="bar hide" id="dlBar"><i></i></div>
+    <p class="note hide" id="dlStat"></p>
+    <div id="result" class="msg"></div>
+    <pre id="log" class="hide"></pre>
+  </div>
+
+</div>
+
+<script>
+const T = "__TOKEN__";
+const $ = s => document.querySelector(s);
+const api = (p, q = {}) => `/api/${p}?` + new URLSearchParams({ t: T, ...q });
+
+let mode = "video", es = null, heights = [];
+
+/* ── залежності ─────────────────────────────────────── */
+async function check() {
+  const d = await (await fetch(api("check"))).json();
+  $("#pills").innerHTML =
+    pill("yt-dlp", d.ytdlp, d.ytdlpVersion) +
+    pill("ffmpeg", d.ffmpeg, d.ffmpegVersion) +
+    `<span class="pill">→ ${d.out.replace(/^\/Users\/[^/]+/, "~")}</span>`;
+  $("#setup").classList.toggle("hide", !!d.ytdlp);
+  $("#noff").classList.toggle("hide", !!d.ffmpeg);
+  $("#btnGo").disabled = !d.ytdlp;
+  return d;
+}
+const pill = (name, path, ver) =>
+  `<span class="pill" title="${path || "не знайдено"}"><i class="dot ${path ? "on" : ""}"></i>${name}${
+    ver ? " " + ver.split(" ")[ver.startsWith("ffmpeg") ? 2 : 0] : ""}</span>`;
+
+$("#btnRecheck").onclick = check;
+
+function install(what, btn, bar, label) {
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "Качаю…";
+  bar.classList.remove("hide"); bar.querySelector("i").style.width = "0";
+  const s = new EventSource(api("install", { what }));
+  s.addEventListener("log", e => btn.textContent = JSON.parse(e.data));
+  s.addEventListener("progress", e =>
+    bar.querySelector("i").style.width = JSON.parse(e.data).percent + "%");
+  s.addEventListener("done", async e => {
+    s.close(); const d = JSON.parse(e.data);
+    btn.disabled = false; btn.textContent = original;
+    bar.classList.add("hide");
+    if (!d.ok) alert("Не вийшло: " + d.error + "\n\nЗапасний шлях у терміналі: " + label);
+    await check();
+  });
+  s.onerror = () => { s.close(); btn.disabled = false; btn.textContent = "Спробувати ще раз"; };
+}
+
+$("#btnInstall").onclick = () =>
+  install("ytdlp", $("#btnInstall"), $("#instBar"), "brew install yt-dlp");
+$("#btnFf").onclick = () =>
+  install("ffmpeg", $("#btnFf"), $("#ffBar"), "brew install ffmpeg");
+
+/* ── режим і якість ─────────────────────────────────── */
+$("#mode").onclick = e => {
+  const b = e.target.closest("button[data-mode]"); if (!b) return;
+  mode = b.dataset.mode;
+  [...$("#mode").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  // Якість, відрізок і субтитри стосуються лише відео та звуку.
+  $("#qualityBox").classList.toggle("hide", mode !== "video");
+  $("#cutBox").classList.toggle("hide", mode === "thumb");
+  $("#tcNote").classList.toggle("hide", mode === "thumb");
+  $("#appleNote").classList.toggle("hide", mode !== "video");
+};
+
+let avcHeights = null;
+
+function fillHeights(list, avc) {
+  heights = list && list.length ? list : [2160, 1440, 1080, 720, 480, 360, 240, 144];
+  avcHeights = avc && avc.length ? avc : null;
+  const mac = true;
+  // Позначаємо висоти, яких немає в H.264: з увімкненою галочкою вони мовчки
+  // опустяться нижче, і без підпису це виглядало б як баг.
+  $("#height").innerHTML = heights.map(h => {
+    const bad = mac && avcHeights && !avcHeights.includes(h);
+    const tag = h >= 2160 ? " (4K)" : h >= 1440 ? " (2K)" : "";
+    return `<option value="${h}">${h}p${tag}${bad ? " · опуститься до " + avcHeights[0] + "p" : ""}</option>`;
+  }).join("");
+  // Поки посилання не розібране, реальних кодеків ми не знаємо. Ставити 4K наосліп —
+  // обіцяти те, що майже завжди опуститься до 1080p, тому дефолт саме 1080p.
+  const best = avcHeights ? avcHeights[0] : (heights.includes(1080) ? 1080 : heights[0]);
+  $("#height").value = heights.includes(best) ? best : heights[0];
+}
+fillHeights();
+
+/* ── розбір посилання ───────────────────────────────── */
+$("#btnInfo").onclick = async () => {
+  const url = $("#url").value.trim(); if (!url) return;
+  const btn = $("#btnInfo"); btn.disabled = true; btn.textContent = "Дивлюсь…";
+  $("#infoErr").className = "msg"; $("#meta").classList.add("hide");
+  try {
+    const d = await (await fetch(api("info", { url, cookies: $("#cookies").value }))).json();
+    if (d.error) throw new Error(d.error);
+    $("#meta").innerHTML =
+      (d.thumbnail ? `<img src="${d.thumbnail}" alt="">` : "") +
+      `<div><b>${esc(d.title)}</b><small>${esc(d.uploader)}${
+        d.duration ? " · " + hms(d.duration) : ""}${
+        d.isPlaylist ? ` · плейліст, ${d.count} відео` : ""}</small></div>`;
+    $("#meta").classList.remove("hide");
+    if (d.isPlaylist) $("#playlist").checked = true;
+    fillHeights(d.heights, d.avcHeights);
+  } catch (e) {
+    $("#infoErr").textContent = e.message;
+    $("#infoErr").className = "msg err";
+  }
+  btn.disabled = false; btn.textContent = "Розібрати";
+};
+$("#url").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnInfo").click(); });
+
+/* ── завантаження ───────────────────────────────────── */
+$("#btnGo").onclick = () => {
+  const url = $("#url").value.trim();
+  if (!url) { $("#url").focus(); return; }
+  const p = {
+    url, mode,
+    height: +$("#height").value || 1080,
+    start: $("#start").value, end: $("#end").value,
+    subs: $("#subs").checked,
+    playlist: $("#playlist").checked, cookies: $("#cookies").value,
+  };
+  running(true);
+  $("#log").textContent = ""; $("#log").classList.remove("hide");
+  $("#result").className = "msg";
+
+  es = new EventSource(api("download", { p: JSON.stringify(p) }));
+  es.addEventListener("log", e => {
+    const el = $("#log");
+    el.textContent += JSON.parse(e.data) + "\n";
+    el.scrollTop = el.scrollHeight;
+  });
+  es.addEventListener("progress", e => {
+    const d = JSON.parse(e.data);
+    $("#dlBar i").style.width = (parseFloat(d.percent) || 0) + "%";
+    $("#dlStat").textContent = `${d.percent}%  ·  ${d.speed}  ·  лишилось ${d.eta}`;
+  });
+  es.addEventListener("done", e => {
+    const d = JSON.parse(e.data); finish();
+    if (d.ok) {
+      $("#dlBar i").style.width = "100%";
+      $("#result").innerHTML = "Готово. " +
+        (d.files?.length ? d.files.map(esc).join("<br>") : "Файл у теці.");
+      $("#result").className = "msg good";
+    } else {
+      $("#result").textContent = d.error || `yt-dlp завершився з кодом ${d.code}. Дивись лог нижче.`;
+      $("#result").className = "msg err";
+    }
+  });
+  es.onerror = () => { if (es) { finish(); } };
+};
+
+$("#btnStop").onclick = () => fetch(api("cancel"));
+// У власному вікні немає вкладок: телеграм має піти в системний браузер.
+document.querySelector(".promo").addEventListener("click", e => {
+  e.preventDefault();
+  fetch(api("tg")).catch(() => window.open("https://t.me/lootaimo", "_blank"));
+});
+$("#btnOpen").onclick = () => fetch(api("reveal"));
+$("#btnQuit").onclick = async () => {
+  if (!confirm("Вимкнути качалку? Незавершене завантаження обірветься.")) return;
+  await fetch(api("quit")).catch(() => {});
+  document.body.innerHTML =
+    "<div style='padding:60px;text-align:center;color:#8B90A0'>Вимкнено. Вкладку можна закрити.</div>";
+};
+
+function running(on) {
+  $("#btnGo").disabled = on;
+  $("#btnGo").textContent = on ? "Качаю…" : "Забрати";
+  $("#btnStop").classList.toggle("hide", !on);
+  $("#dlBar").classList.toggle("hide", !on);
+  $("#dlStat").classList.toggle("hide", !on);
+  if (on) { $("#dlBar i").style.width = "0"; $("#dlStat").textContent = ""; }
+}
+function finish() { if (es) { es.close(); es = null; } running(false); $("#dlBar").classList.remove("hide"); }
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hms = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s % 60)]
+  .filter((v, i) => i > 0 || v > 0).map((v, i) => i ? String(v).padStart(2, "0") : v).join(":");
+
+check();
+</script>
+</body>
+</html>

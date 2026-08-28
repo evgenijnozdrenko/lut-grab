@@ -1,0 +1,39 @@
+name: LUT Grab (Windows)
+
+# Зібрати .exe можна тільки на Windows: PyInstaller не вміє крос-компіляцію,
+# тому з macOS ця збірка не запускається принципово — тільки тут.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['lut-grab-v*']
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/lut-grab
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install pyinstaller
+
+      - name: Зібрати LUT Grab.exe
+        run: >
+          pyinstaller --noconfirm --clean --onefile --windowed
+          --name "LUT Grab"
+          --icon icon.ico
+          --add-data "ui.html;."
+          server.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LUT-Grab-Windows
+          path: |
+            apps/lut-grab/dist/LUT Grab.exe
+            apps/lut-grab/ЯК ВІДКРИТИ.txt
